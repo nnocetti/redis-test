@@ -4,7 +4,11 @@ import random
 
 r = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
 
-# PUB/SUB PATTERN PRODUCER
+# STREAM PRODUCER
+items = 'abc'
+
 while True:
-  r.publish('test', time.ctime(time.time()))
+  itemId = random.choice(items)
+  id = r.xadd(name='test-stream', fields={'item': f'item-{itemId}'}, id='*')
+  print (id)
   time.sleep(3)
