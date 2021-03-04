@@ -1,0 +1,42 @@
+version: "3.4"
+
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - test-redis
+  consumer-a:
+    build:
+      dockerfile: ./docker/consumer-a.Dockerfile
+      context: ../
+    volumes:
+      - type: bind
+        source: ../src
+        target: /opt/src
+    networks:
+      - test-redis
+  consumer-b:
+    build:
+      dockerfile: ./docker/consumer-b.Dockerfile
+      context: ../
+    volumes:
+      - type: bind
+        source: ../src
+        target: /opt/src
+    networks:
+      - test-redis
+  producers:
+    build:
+      dockerfile: ./docker/producers.Dockerfile
+      context: ../
+    volumes:
+      - type: bind
+        source: ../src
+        target: /opt/src
+    networks:
+      - test-redis
+networks:
+  test-redis:
+    driver: bridge
