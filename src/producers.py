@@ -1,6 +1,7 @@
 import redis
 import time
 import random
+import threading
 
 # Este es un ejemplo más complejo, supongamos que tengo items de distinto tipo, (1, 2, 3, 4, 5, 6, 7),
 # y un grupo de depositos (a, b, c), los items en función de su tipo se deben guardar en un depósito especifico.
@@ -15,8 +16,8 @@ import random
 # asociada a la tarea no puedo saber a que worker asignarla, necesito consultar la BD Redis con información
 # suplementaria para poder asignar la task.
 
-# Esperamos que levante REDIS
-time.sleep(3)
+# Esperamos que levante REDIS y los consumidores
+time.sleep(4)
 
 # STREAM PRODUCER
 
@@ -40,21 +41,21 @@ r.hmset('item-6', item6)
 
 print(f'Delete stream: {r.delete("test-stream")}')
 
-while True:
-  itemType = f'item-{random.choice(itemsId)}'
+def createProducer(producerId):
+  while True:
+    itemType = f'item-{random.choice(itemsId)}'
 
-  ticketId = r.xadd(name='test-stream', fields={'itemType': itemType}, id='*', maxlen=100)
+    ticketId = r.xadd(name='test-stream', fields={'itemType': itemType}, id='*', maxlen=1000000)
 
-  print (f'producer -> Despacho    itemType: {itemType}, ticket: {ticketId}')
+    # Ahora esperamos a respuesta, va estar en una lista con key igual al tickeId obtenido!
+    response = r.blpop(ticketId, 1)
 
-  # Ahora esperamos a respuesta, va estar en una lista con key igual al tickeId obtenido!
-  response = r.blpop(ticketId, 2)
+    if (not response and itemType not in ('item-3', 'item-6', 'item-7')):
+      print (f'producer{producerId} -> ERROR      itemType: {itemType}, ticket: {ticketId}')
 
-  if (not response):
-    # Se verifica que sea por item inválido (item-7) o no haya consumidor corriendo (item-3, item-6)
-    print (f'producer -> ERROR       itemType: {itemType}, ticket: {ticketId}, response: {response}')
+    time.sleep(0.5)
 
-  else:
-    print (f'producer -> Comprobante itemType: {itemType}, ticket: {response[0]}, casillero: {response[1]}')
-
-    time.sleep(2)
+producers = list()
+for producerId in range(10000):
+  producer = threading.Thread(target=createProducer, args=(producerId, ))
+  producer.start()
