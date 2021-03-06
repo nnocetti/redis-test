@@ -9,4 +9,4 @@ COPY ./src/requirements.txt ./
 # install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "-u", "./consumer-b.py"]
+CMD ["python", "-u", "./consumers.py"]

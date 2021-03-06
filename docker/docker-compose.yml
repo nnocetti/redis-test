@@ -7,19 +7,9 @@ services:
       - 6379:6379
     networks:
       - test-redis
-  consumer-a:
+  consumers:
     build:
-      dockerfile: ./docker/consumer-a.Dockerfile
-      context: ../
-    volumes:
-      - type: bind
-        source: ../src
-        target: /opt/src
-    networks:
-      - test-redis
-  consumer-b:
-    build:
-      dockerfile: ./docker/consumer-b.Dockerfile
+      dockerfile: ./docker/consumers.Dockerfile
       context: ../
     volumes:
       - type: bind
